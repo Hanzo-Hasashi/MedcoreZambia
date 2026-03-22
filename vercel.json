@@ -1,0 +1,65 @@
+{
+  "version": 2,
+  "buildCommand": "node scripts/inject-env.js",
+  "outputDirectory": "public",
+  "functions": {
+    "api/ai.js": {
+      "maxDuration": 30,
+      "memory": 256
+    },
+    "api/admin.js": {
+      "maxDuration": 15,
+      "memory": 256
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/supabase-client.js",
+      "dest": "/public/supabase-client.js"
+    },
+    {
+      "src": "/medcore-v3.html",
+      "dest": "/public/medcore-v3.html"
+    },
+    {
+      "src": "/",
+      "dest": "/public/index.html"
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|svg|ico|woff2|webp))",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/medcore-v3.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options",  "value": "nosniff" },
+        { "key": "X-Frame-Options",          "value": "DENY" },
+        { "key": "X-XSS-Protection",         "value": "1; mode=block" },
+        { "key": "Referrer-Policy",          "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy",       "value": "camera=(), microphone=(), geolocation=()" }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
+      "source": "/supabase-client.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    }
+  ]
+}
