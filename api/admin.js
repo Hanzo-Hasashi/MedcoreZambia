@@ -100,6 +100,13 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  async function subjectSlugExists(subjectSlug) {
+    if (!subjectSlug) return false;
+    const safeSubject = s(subjectSlug, 100);
+    const data = await supa(`subjects?select=id&slug=eq.${encodeURIComponent(safeSubject)}`);
+    return Array.isArray(data) && data.length > 0;
+  }
+
   try {
     switch (action) {
 
@@ -131,6 +138,9 @@ module.exports = async function handler(req, res) {
         const { title, subject, type, content_url, description, premium } = req.body || {};
         if (!title || !subject || !type) {
           return res.status(400).json({ error: 'title, subject, and type are required' });
+        }
+        if (!await subjectSlugExists(subject)) {
+          return res.status(400).json({ error: 'Subject is not allowed; choose a valid core discipline' });
         }
         const mat = await supa('materials', 'POST', {
           title:       s(title, 200),
@@ -213,6 +223,9 @@ module.exports = async function handler(req, res) {
         if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
         const { title, description, subject, link } = req.body || {};
         if (!title) return res.status(400).json({ error: 'title required' });
+        if (subject && !await subjectSlugExists(subject)) {
+          return res.status(400).json({ error: 'Subject is not allowed; choose a valid core discipline' });
+        }
         const rec = await supa('recommendations', 'POST', {
           title:       s(title, 200),
           description: s(description, 2000) || null,
