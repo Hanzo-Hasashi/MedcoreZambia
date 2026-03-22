@@ -1107,11 +1107,8 @@ userGoal:         settings.userGoal     || '',
         <div class="g2">
           <div class="card stagger" style="--i:4">
             <div class="card-hd"><span class="sec-title">📖 Continue Learning</span><span class="card-link" onclick="nav('subjects')">All subjects →</span></div>
-            <div class="card-bd" style="padding:14px 20px">
-              <div class="lesson-row" onclick="nav('lesson')"><div class="lesson-thumb" style="background:var(--forest-g)">❤️</div><div style="flex:1;min-width:0"><div class="lesson-title">Cardiac Action Potentials</div><div class="lesson-meta-t">Physiology · Module 4</div><div class="prog-track" style="margin-top:5px"><div class="prog-fill pf-forest" data-w="68"></div></div></div><div class="lesson-pct">68%</div></div>
-              <div class="lesson-row" onclick="nav('lesson')"><div class="lesson-thumb" style="background:var(--sapphire-g)">🧬</div><div style="flex:1;min-width:0"><div class="lesson-title">DNA Replication Enzymes</div><div class="lesson-meta-t">Biochemistry · Module 2</div><div class="prog-track" style="margin-top:5px"><div class="prog-fill pf-sapp" data-w="35"></div></div></div><div class="lesson-pct">35%</div></div>
-              <div class="lesson-row" onclick="nav('lesson')"><div class="lesson-thumb" style="background:rgba(30,77,58,.08)">🦠</div><div style="flex:1;min-width:0"><div class="lesson-title">Gram-Positive Bacteria</div><div class="lesson-meta-t">Microbiology · Module 3</div><div class="prog-track" style="margin-top:5px"><div class="prog-fill pf-forest" data-w="52"></div></div></div><div class="lesson-pct">52%</div></div>
-              <div class="lesson-row" onclick="nav('lesson')" style="border-bottom:none"><div class="lesson-thumb" style="background:var(--amber-g)">💊</div><div style="flex:1;min-width:0"><div class="lesson-title">Beta-Blockers Mechanism</div><div class="lesson-meta-t">Pharmacology · Module 5</div><div class="prog-track" style="margin-top:5px"><div class="prog-fill pf-amber" data-w="20"></div></div></div><div class="lesson-pct">20%</div></div>
+            <div class="card-bd" style="padding:14px 20px" id="dashLessonRows">
+              <!-- Dynamically populated from database -->
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:18px">
@@ -1142,13 +1139,13 @@ userGoal:         settings.userGoal     || '',
           <div class="card-hd"><span class="sec-title">📊 Subject Progress</span><span class="card-link" onclick="nav('subjects')">View all →</span></div>
           <div class="card-bd">
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">
-              <div><div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:5px"><span>🦷 Anatomy</span><span style="font-family:var(--f-m);color:var(--ink-3)" id="sp-anatomy-pct">72%</span></div><div class="prog-track"><div class="prog-fill pf-forest" data-w="72" data-subject="anatomy"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:5px"><span>� Anatomy</span><span style="font-family:var(--f-m);color:var(--ink-3)" id="sp-anatomy-pct">72%</span></div><div class="prog-track"><div class="prog-fill pf-forest" data-w="72" data-subject="anatomy"></div></div></div>
               <div><div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:5px"><span>❤️ Physiology</span><span style="font-family:var(--f-m);color:var(--ink-3)" id="sp-physiology-pct">58%</span></div><div class="prog-track"><div class="prog-fill pf-forest" data-w="58" data-subject="physiology"></div></div></div>
               <div><div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:5px"><span>🧬 Biochemistry</span><span style="font-family:var(--f-m);color:var(--ink-3)" id="sp-biochemistry-pct">41%</span></div><div class="prog-track"><div class="prog-fill pf-sapp" data-w="41" data-subject="biochemistry"></div></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:5px"><span>🔬 Pathology</span><span style="font-family:var(--f-m);color:var(--ink-3)" id="sp-pathology-pct">29%</span></div><div class="prog-track"><div class="prog-fill pf-amber" data-w="29" data-subject="pathology"></div></div></div>
               <div><div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:5px"><span>💊 Pharmacology</span><span style="font-family:var(--f-m);color:var(--ink-3)" id="sp-pharmacology-pct">35%</span></div><div class="prog-track"><div class="prog-fill pf-amber" data-w="35" data-subject="pharmacology"></div></div></div>
               <div><div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:5px"><span>🦠 Microbiology</span><span style="font-family:var(--f-m);color:var(--ink-3)" id="sp-microbiology-pct">63%</span></div><div class="prog-track"><div class="prog-fill pf-forest" data-w="63" data-subject="microbiology"></div></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:5px"><span>🏥 Clinical Med</span><span style="font-family:var(--f-m);color:var(--ink-3)" id="sp-clinical-pct">18%</span></div><div class="prog-track"><div class="prog-fill pf-crim" data-w="18" data-subject="clinical"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:5px"><span>🩺 Internal Medicine</span><span style="font-family:var(--f-m);color:var(--ink-3)" id="sp-internal-medicine-pct">45%</span></div><div class="prog-track"><div class="prog-fill pf-forest" data-w="45" data-subject="internal-medicine"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:5px"><span>🏥 Clinical Skills</span><span style="font-family:var(--f-m);color:var(--ink-3)" id="sp-clinical-skills-pct">18%</span></div><div class="prog-track"><div class="prog-fill pf-crim" data-w="18" data-subject="clinical-skills"></div></div></div>
             </div>
           </div>
         </div>
@@ -1183,15 +1180,10 @@ userGoal:         settings.userGoal     || '',
       <div class="view" id="view-quiz" style="position:relative">
         <div id="quiz-setup">
           <div style="margin-bottom:22px"><div class="page-h1">Practice Quizzes</div><div class="page-sub">Filter, then start. Wrong answers reviewed at the end.</div></div>
-          <div class="quiz-filter-bar">
+          <div class="quiz-filter-bar" id="quizSubjectFilters">
             <span style="font-size:.79rem;font-weight:600;color:var(--ink-3)">Subject:</span>
             <div class="filter-chip active" onclick="setF(this,'all','subj')">All</div>
-            <div class="filter-chip" onclick="setF(this,'physiology','subj')">Physiology</div>
-            <div class="filter-chip" onclick="setF(this,'pharmacology','subj')">Pharmacology</div>
-            <div class="filter-chip" onclick="setF(this,'microbiology','subj')">Microbiology</div>
-            <div class="filter-chip" onclick="setF(this,'anatomy','subj')">Anatomy</div>
-            <div class="filter-chip" onclick="setF(this,'biochemistry','subj')">Biochemistry</div>
-            <div class="filter-chip" onclick="setF(this,'pathology','subj')">Pathology</div>
+            <!-- Dynamically populated from database -->
           </div>
           <div class="quiz-filter-bar">
             <span style="font-size:.79rem;font-weight:600;color:var(--ink-3)">Difficulty:</span>
@@ -1771,9 +1763,6 @@ userGoal:         settings.userGoal     || '',
                     <label class="form-lbl">Subject</label>
                     <select class="form-inp form-select" id="matSubject" style="margin-bottom:0">
                       <option value="">Select subject…</option>
-                      <option>Anatomy</option><option>Physiology</option><option>Biochemistry</option>
-                      <option>Pathology</option><option>Pharmacology</option><option>Microbiology</option>
-                      <option>Clinical Medicine</option><option>General / Mixed</option>
                     </select>
                   </div>
                   <div>
@@ -1942,7 +1931,7 @@ let S = {
   qFilter:'all', qDiff:'all',
   streak:0, bestStreak:0,
   lessonsCompleted:0,
-  subjectProgress:{ anatomy:0, physiology:0, biochemistry:0, pathology:0, pharmacology:0, microbiology:0, clinical:0 },
+  subjectProgress:{ anatomy:0, physiology:0, biochemistry:0, pharmacology:0, microbiology:0, 'internal-medicine':0, pediatrics:0, 'obstetrics-gynecology':0, surgery:0, 'clinical-skills':0 },
   lastStudyDate: null,
 };
 
@@ -2195,26 +2184,56 @@ document.addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openSearch()}
   if(e.key==='Escape'){closeSearch();closeAllModals();closeNotif()}
 });
-const SD=[
-  {ico:'❤️',title:'Cardiac Action Potentials',sub:'Physiology · Module 4',v:'lesson'},
-  {ico:'💊',title:'Beta-Blockers Mechanism',sub:'Pharmacology · Module 5',v:'lesson'},
-  {ico:'🦠',title:'Gram-Positive Bacteria',sub:'Microbiology · Module 3',v:'lesson'},
-  {ico:'🧬',title:'DNA Replication',sub:'Biochemistry · Module 2',v:'lesson'},
-  {ico:'🃏',title:'Flashcards (SM-2)',sub:'8 due today',v:'flashcards'},
-  {ico:'✅',title:'Practice Quiz',sub:'Up to 8 questions',v:'quiz'},
-  {ico:'🔬',title:'Acute Inflammation',sub:'Pathology · Module 1',v:'lesson'},
-  {ico:'🤖',title:'AI Tutor (Claude)',sub:'Ask anything',v:'ai'},
-];
+// Dynamically loaded from Supabase — not hardcoded
+let SD = [];
+
+// Load search suggestions from database
+async function loadSearchSuggestions() {
+  try {
+    const [lessons, fcs, qs] = await Promise.all([
+      MedcoreDB.getLessons().catch(() => []),
+      MedcoreDB.getFlashcards().catch(() => []),
+      MedcoreDB.getQuizQuestions().catch(() => [])
+    ]);
+    
+    SD = [];
+    // Add top 3 lessons
+    lessons.slice(0, 3).forEach(l => {
+      const subj = _contentCache.subjects?.find(s => s.id === l.subject_id);
+      SD.push({
+        ico: subj?.emoji || '📚',
+        title: l.title,
+        sub: (subj?.name || 'Course') + ' · ' + (l.duration || ''),
+        v: 'lesson',
+        id: l.id
+      });
+    });
+    
+    // Add all content access items
+    const dueFC = (S.fcCards || []).filter(c => c.next <= Date.now() + 60000).length;
+    const availableQ = qs.filter(q => !q.is_premium || currentUser?.isPremium).length;
+    SD.push(
+      {ico:'🃏',title:'Flashcards (SM-2)',sub:(dueFC || 0) + ' due today',v:'flashcards'},
+      {ico:'✅',title:'Practice Quiz',sub:'Up to ' + Math.min(availableQ || 8, 8) + ' questions',v:'quiz'},
+      {ico:'🤖',title:'AI Tutor (Claude)',sub:'Ask anything',v:'ai'}
+    );
+  } catch(e) {
+    console.error('Failed to load search suggestions:', e);
+  }
+}
 function doSearch(q){
   const r=document.getElementById('searchResults');
   if(!q.trim()){
-    r.innerHTML=`<div style="padding:10px 18px 6px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-4)">QUICK ACCESS</div>`+
-    SD.slice(0,4).map(d=>`<div class="sr-item" onclick="nav('${d.v}');closeSearch()"><div class="sr-ico" style="background:var(--forest-g);color:var(--forest)">${d.ico}</div><div><div class="sr-title">${d.title}</div><div class="sr-sub">${d.sub}</div></div></div>`).join('');
+    // Use dynamically loaded suggestions
+    const suggestions = SD.slice(0, 4).map(d=>
+      `<div class="sr-item" onclick="nav('${d.v}');closeSearch()"><div class="sr-ico" style="background:var(--forest-g);color:var(--forest)">${d.ico}</div><div><div class="sr-title">${d.title}</div><div class="sr-sub">${d.sub}</div></div></div>`
+    ).join('');
+    r.innerHTML = (SD.length > 0 ? `<div style="padding:10px 18px 6px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-4)">QUICK ACCESS</div>` : '') + suggestions;
     return;
   }
-  const hits=SD.filter(d=>d.title.toLowerCase().includes(q.toLowerCase())||d.sub.toLowerCase().includes(q.toLowerCase()));
-  r.innerHTML=hits.length
-    ? hits.map(d=>`<div class="sr-item" onclick="nav('${d.v}');closeSearch()"><div class="sr-ico" style="background:var(--forest-g);color:var(--forest)">${d.ico}</div><div><div class="sr-title">${d.title}</div><div class="sr-sub">${d.sub}</div></div><span class="chip chip-forest" style="margin-left:auto;font-size:.67rem">Open</span></div>`).join('')
+  const hits = SD.filter(d => d.title.toLowerCase().includes(q.toLowerCase()) || d.sub.toLowerCase().includes(q.toLowerCase()));
+  r.innerHTML = hits.length
+    ? hits.map(d => `<div class="sr-item" onclick="nav('${d.v}');closeSearch()"><div class="sr-ico" style="background:var(--forest-g);color:var(--forest)">${d.ico}</div><div><div class="sr-title">${d.title}</div><div class="sr-sub">${d.sub}</div></div><span class="chip chip-forest" style="margin-left:auto;font-size:.67rem">Open</span></div>`).join('')
     : `<div style="text-align:center;padding:36px;color:var(--ink-4)"><div style="font-size:26px;margin-bottom:8px">🔍</div>No results for "<b>${q}</b>"</div>`;
 }
 
@@ -2338,7 +2357,8 @@ function updateDashboard(){
   // Update subject progress bars and labels from state
   const sp = Object.assign({
     anatomy:0, physiology:0, biochemistry:0,
-    pathology:0, pharmacology:0, microbiology:0, clinical:0
+    pharmacology:0, microbiology:0, 'internal-medicine':0, pediatrics:0,
+    'obstetrics-gynecology':0, surgery:0, 'clinical-skills':0
   }, S.subjectProgress || {});
   document.querySelectorAll('[data-subject]').forEach(bar => {
     const subj = bar.dataset.subject;
@@ -2360,11 +2380,38 @@ function updateDashboard(){
   const upgCTA = document.getElementById('dashUpgradeCTA');
   if (upgCTA) upgCTA.style.display = currentUser?.isPremium ? 'none' : 'block';
 
+  // Dynamically populate dashboard lesson rows from database
+  loadDashboardLessons();
+
   // Refresh leaderboard from Supabase
   if (currentUser) loadLeaderboard();
 
   // Load notifications for the user
   if (currentUser) loadNotifications();
+}
+
+// Dynamically populate "Continue Learning" with actual lessons from database
+async function loadDashboardLessons() {
+  const container = document.getElementById('dashLessonRows');
+  if (!container) return;
+  
+  try {
+    const lessons = (_contentCache.lessons?.slice(0, 4)) || (await MedcoreDB.getLessons()).slice(0, 4);
+    if (!lessons || lessons.length === 0) {
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-4)">No lessons available yet.</div>';
+      return;
+    }
+    
+    container.innerHTML = lessons.map((l, i) => {
+      const subj = _contentCache.subjects?.find(s => s.id === l.subject_id);
+      const prog = S.subjectProgress?.[subj?.slug || 'general'] || 0;
+      const isBorder = i === lessons.length - 1 ? ';border-bottom:none' : '';
+      return `<div class="lesson-row" onclick="nav('lesson')" style="cursor:pointer${isBorder}"><div class="lesson-thumb" style="background:linear-gradient(135deg,${subj?.color_from || '#1a4332'},${subj?.color_to || '#0f2a1e'})">${subj?.emoji || '📚'}</div><div style="flex:1;min-width:0"><div class="lesson-title">${l.title}</div><div class="lesson-meta-t">${subj?.name || 'Course'} · ${l.duration || ''}</div><div class="prog-track" style="margin-top:5px"><div class="prog-fill pf-forest" data-w="${prog}" style="width:${prog}%"></div></div></div><div class="lesson-pct">${prog}%</div></div>`;
+    }).join('');
+  } catch(e) {
+    console.error('Failed to load dashboard lessons:', e);
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-4)">Error loading lessons</div>';
+  }
 }
 
 // Leaderboard — top 10 users by XP from Supabase
@@ -2520,6 +2567,9 @@ function getQs(){
 
 // ── Per-view access enforcement ───────────────────────────────────────────────
 function applyQuizAccess() {
+  // Populate subject filter chips dynamically
+  populateQuizSubjectFilters();
+  
   const isPremium = currentUser?.isPremium;
   const gate = document.getElementById('gate-quiz');
   if (isPremium) { if (gate) gate.classList.remove('visible'); return; }
@@ -2535,6 +2585,26 @@ function applyQuizAccess() {
   const qs = getQs();
   const countEl = document.getElementById('qCount');
   if (countEl) countEl.textContent = qs.length;
+}
+
+// Dynamically populate quiz subject filter chips from database subjects
+function populateQuizSubjectFilters() {
+  const container = document.getElementById('quizSubjectFilters');
+  if (!container) return;
+  
+  // Get all existing filter chips and remove them (keeping the label and "All" chip)
+  const existing = container.querySelectorAll('.filter-chip:not(:first-of-type)');
+  existing.forEach(chip => chip.remove());
+  
+  // Add chips for each subject in database
+  const subjects = _contentCache.subjects || [];
+  subjects.forEach(subj => {
+    const chip = document.createElement('div');
+    chip.className = 'filter-chip';
+    chip.textContent = subj.name.length > 12 ? subj.name.substring(0, 10) + '...' : subj.name;
+    chip.onclick = () => setF(chip, subj.slug, 'subj');
+    container.appendChild(chip);
+  });
 }
 
 function applyFCAccess() {
@@ -3921,7 +3991,7 @@ function _defaultState() {
     qFilter:'all', qDiff:'all',
     streak:0, bestStreak:0,
     lessonsCompleted:0,
-    subjectProgress:{ anatomy:0, physiology:0, biochemistry:0, pathology:0, pharmacology:0, microbiology:0, clinical:0 },
+    subjectProgress:{ anatomy:0, physiology:0, biochemistry:0, pharmacology:0, microbiology:0, 'internal-medicine':0, pediatrics:0, 'obstetrics-gynecology':0, surgery:0, 'clinical-skills':0 },
     lastStudyDate: null,
   };
 }
@@ -4187,6 +4257,13 @@ async function loadContent() {
 
     // Re-render flashcard deck
     initFC();
+
+    // Load lessons for dashboard and search
+    const lessons = await MedcoreDB.getLessons();
+    _contentCache.lessons = lessons;
+
+    // Load dynamic search suggestions from database
+    await loadSearchSuggestions();
 
   } catch (e) {
     console.warn('[loadContent] error:', e.message);
@@ -4532,7 +4609,7 @@ async function populateSubjectDropdowns() {
     const isFilter = id.includes('filter');
     el.innerHTML = (isFilter ? '<option value="">All subjects</option>' : '<option value="">Select subject…</option>') + idOpts;
   });
-  const matEl = document.getElementById('mat-subject');
+  const matEl = document.getElementById('matSubject');
   if (matEl) {
     matEl.innerHTML = '<option value="">Select subject…</option>' + slugOpts;
   }

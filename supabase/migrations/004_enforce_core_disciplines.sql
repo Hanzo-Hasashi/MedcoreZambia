@@ -4,7 +4,7 @@
 -- ============================================================
 
 -- Core discipline set; each subject is allowed as the source of truth.
-WITH core AS (
+WITH core(name, slug, emoji, description, color_from, color_to, chip_class, sort_order) AS (
   VALUES
     ('Internal Medicine','internal-medicine','🩺','Comprehensive adult medical care.', '#18324f','#1a4a72','chip-forest',0),
     ('Pediatrics','pediatrics','👶','Child health and disease management.', '#1f4f3c','#2f8f5f','chip-forest',1),
