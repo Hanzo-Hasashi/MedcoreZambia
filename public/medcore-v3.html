@@ -970,7 +970,7 @@ userGoal:         settings.userGoal     || '',
       <label class="form-lbl">Display Name</label>
       <input class="form-inp" id="setName" value="Your Name">
       <label class="form-lbl">Specialization</label>
-      <select class="form-inp form-select" id="setRole"><option>Clinical</option><option>Medical Student (Year 3)</option><option>Pre-Med</option><option>Intern / Resident</option></select>
+      <select class="form-inp form-select" id="setRole"><option>Clinical</option><option>Pre-Clinical</option><option>Intern / Resident</option></select>
       <label class="form-lbl">Daily Study Goal</label>
       <select class="form-inp form-select" id="setGoal"><option>15 min / day</option><option selected>30 min / day</option><option>60 min / day</option></select>
       <label class="form-lbl">University</label>
@@ -2239,7 +2239,7 @@ function closeAllModals(){
 function saveSettings(){
   if (!requireSession()) return;
   const name = document.getElementById('setName')?.value.trim() || (currentUser?.name) || 'Student';
-  const role = document.getElementById('setRole')?.value || 'Medical Student (Year 2)';
+  const role = document.getElementById('setRole')?.value || 'Pre-Clinical';
   const goal = document.getElementById('setGoal')?.value || '30 min / day';
   S.userName = name; S.userRole = role; S.userGoal = goal; save();
   // Update sidebar live
