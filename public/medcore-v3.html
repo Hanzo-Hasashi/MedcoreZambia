@@ -4075,6 +4075,9 @@ async function loadContent() {
       S.fcCards = BASE_FC.map(c => ({ ...c }));
     }
 
+    // Filter subjects to only display those with content (lessons or materials)
+    _contentCache.subjectsWithContent = await filterSubjectsWithContent(_contentCache.subjects);
+
     // Re-render subjects grid
     renderSubjects();
 
@@ -4091,18 +4094,46 @@ async function loadContent() {
   }
 }
 
+// ── Filter subjects to only those with content ──────────────────────
+async function filterSubjectsWithContent(subjects) {
+  if (!subjects || subjects.length === 0) return [];
+  
+  const subjectsWithContent = [];
+  for (const subject of subjects) {
+    try {
+      // Check if subject has lessons
+      const lessons = await MedcoreDB.getLessons(subject.id);
+      if (lessons && lessons.length > 0) {
+        subjectsWithContent.push(subject);
+        continue;
+      }
+      
+      // Check if subject has materials (by slug or name)
+      const materials = await MedcoreDB.getMaterials(subject.slug || subject.name);
+      if (materials && materials.length > 0) {
+        subjectsWithContent.push(subject);
+        continue;
+      }
+    } catch (e) {
+      console.warn(`[filterSubjectsWithContent] Could not check content for ${subject.name}:`, e);
+    }
+  }
+  return subjectsWithContent;
+}
+
 // ── Render subjects grid from cache ──────────────────────────────────
 function renderSubjects() {
   const grid = document.getElementById('subjects-content');
   if (!grid) return;
-  const subjects = _contentCache.subjects || [];
+  // Use filtered subjects (only those with content)
+  const subjects = _contentCache.subjectsWithContent || [];
   const sp = S.subjectProgress || {};
 
   if (!subjects.length) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-4)">
       <div style="font-size:28px;margin-bottom:8px">📭</div>
-      <div style="font-size:.9rem;font-weight:600">No subjects yet</div>
-      <div style="font-size:.82rem;margin-top:4px">Add subjects in the Admin → Content tab</div>
+      <div style="font-size:.9rem;font-weight:600">No subjects with content yet</div>
+      <div style="font-size:.82rem;margin-top:4px">Add lessons or materials in the Admin Console to display them here</div>
     </div>`;
     return;
   }
