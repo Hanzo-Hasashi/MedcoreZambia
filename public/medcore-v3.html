@@ -589,6 +589,20 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .sr-item:hover .sr-ico{transform:scale(1.12) rotate(-3deg)}
 .sr-title{font-size:.86rem;font-weight:600;margin-bottom:1px}
 .sr-sub{font-size:.73rem;color:var(--ink-4)}
+
+/* Notifications */
+.notif-list{display:flex;flex-direction:column;gap:8px}
+.notif-item{display:flex;gap:12px;padding:16px;background:var(--surface-r);border:1.5px solid var(--border);border-radius:var(--r);transition:all .2s var(--ease)}
+.notif-item:hover{background:var(--canvas-2);border-color:var(--border-2)}
+.notif-item.unread{background:linear-gradient(135deg,rgba(26,67,50,.04),rgba(26,67,50,.02));border-color:var(--forest)}
+.notif-ico{width:40px;height:40px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--canvas-2);flex-shrink:0}
+.notif-content{flex:1}
+.notif-title{font-size:.9rem;font-weight:600;margin-bottom:2px}
+.notif-message{font-size:.8rem;color:var(--ink-2);line-height:1.4}
+.notif-time{font-size:.7rem;color:var(--ink-4);margin-top:4px}
+.notif-mark-read{position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s}
+.notif-item:hover .notif-mark-read{opacity:1;pointer-events:all}
+
 .modal-wrap{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal-bg{position:absolute;inset:0;background:rgba(28,26,23,.6);backdrop-filter:blur(4px);z-index:0}
 .modal-box{position:relative;width:100%;max-width:500px;background:var(--surface-r);border:1.5px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-lg);animation:modalIn .3s var(--spring);z-index:1}
@@ -1033,6 +1047,7 @@ userGoal:         settings.userGoal     || '',
       <div class="sb-item" id="sb-flashcards" onclick="nav('flashcards')"><span class="sb-item-ico">🃏</span>Flashcards</div>
       <div class="sb-item" id="sb-ai" onclick="nav('ai')"><span class="sb-item-ico">🤖</span>AI Tutor</div>
       <div class="sb-sec-lbl" style="margin-top:8px">You</div>
+      <div class="sb-item" id="sb-notifications" onclick="nav('notifications')"><span class="sb-item-ico">🔔</span>Notifications<span class="sb-badge" id="sbNotifBadge" style="display:none">0</span></div>
       <div class="sb-item" id="sb-profile" onclick="nav('profile')"><span class="sb-item-ico">👤</span>Profile</div>
       <div class="sb-item" id="sb-admin" onclick="nav('admin')" style="display:none"><span class="sb-item-ico">⚙️</span>Admin</div>
     </nav>
@@ -1366,6 +1381,21 @@ userGoal:         settings.userGoal     || '',
               <button class="pgate-cta" onclick="openWhatsAppUpgrade()">Upgrade — K50/month →</button>
               <button class="pgate-sub-link" onclick="closeGate('ai')">Use my 5 free questions</button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== NOTIFICATIONS ===== -->
+      <div class="view" id="view-notifications">
+        <div class="page-hd">
+          <div class="page-hd-l">
+            <div class="page-ico">🔔</div>
+            <div><div class="page-title">Notifications</div><div class="page-sub">Stay updated with new content and recommendations</div></div>
+          </div>
+        </div>
+        <div class="page-bd">
+          <div id="notificationsList" class="notif-list">
+            <!-- Notifications will be loaded here -->
           </div>
         </div>
       </div>
@@ -2055,6 +2085,7 @@ const VIEW_HASH = {
   quiz:       '#/quiz',
   flashcards: '#/flashcards',
   ai:         '#/ai',
+  notifications: '#/notifications',
   profile:    '#/profile',
   admin:      '#/admin',
 };
@@ -2071,7 +2102,7 @@ window.addEventListener('popstate', () => {
   if (view !== curView) navInternal(view);
 });
 
-const navOrder = ['dashboard','subjects','lesson','quiz','flashcards','ai','profile','admin'];
+const navOrder = ['dashboard','subjects','lesson','quiz','flashcards','ai','notifications','profile','admin'];
 
 function nav(view) {
   // Auth guard — all views require sign-in
@@ -2125,6 +2156,7 @@ function navInternal(view) {
     if (view !== 'quiz') clearInterval(qS.tiInt);
     if (view === 'profile') { buildHeatmap(); updateProfile(); }
     if (view === 'dashboard') updateDashboard();
+    if (view === 'notifications') loadNotifications();
     if (view === 'flashcards') { initFC(); applyFCAccess(); }
     if (view === 'quiz') applyQuizAccess();
     if (view === 'ai') applyAIAccess();
@@ -2329,7 +2361,10 @@ function updateDashboard(){
   if (upgCTA) upgCTA.style.display = currentUser?.isPremium ? 'none' : 'block';
 
   // Refresh leaderboard from Supabase
- if (currentUser) loadLeaderboard();
+  if (currentUser) loadLeaderboard();
+
+  // Load notifications for the user
+  if (currentUser) loadNotifications();
 }
 
 // Leaderboard — top 10 users by XP from Supabase
@@ -2399,6 +2434,71 @@ async function loadLeaderboard() {
       el2.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-4);font-size:.8rem">Leaderboard unavailable</div>';
     }
   }
+}
+
+// ===== NOTIFICATIONS =====
+async function loadNotifications() {
+  const el = document.getElementById('notificationsList');
+  if (!el || !currentUser) return;
+
+  try {
+    const notifications = await MedcoreDB.getNotifications(currentUser.id);
+    if (!notifications || notifications.length === 0) {
+      el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-4);font-size:.9rem">No notifications yet</div>';
+      updateNotificationBadge(0);
+      return;
+    }
+
+    el.innerHTML = notifications.map(notif => {
+      const isRead = notif.is_read;
+      const timeAgo = getTimeAgo(new Date(notif.created_at));
+      return `<div class="notif-item${isRead ? '' : ' unread'}" onclick="markAsRead(${notif.id})">
+        <div class="notif-header">
+          <div class="notif-title">${esc2(notif.title)}</div>
+          <div class="notif-time">${timeAgo}</div>
+        </div>
+        <div class="notif-message">${esc2(notif.message)}</div>
+        ${!isRead ? '<div class="notif-dot"></div>' : ''}
+      </div>`;
+    }).join('');
+
+    const unreadCount = notifications.filter(n => !n.is_read).length;
+    updateNotificationBadge(unreadCount);
+  } catch (e) {
+    console.error('Failed to load notifications:', e);
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-4);font-size:.8rem">Failed to load notifications</div>';
+  }
+}
+
+function updateNotificationBadge(count) {
+  const badge = document.getElementById('sbNotifBadge') || document.getElementById('notifBadge');
+  if (badge) {
+    badge.textContent = count > 0 ? count : '';
+    badge.style.display = count > 0 ? 'inline-block' : 'none';
+  }
+}
+
+async function markAsRead(notificationId) {
+  try {
+    await MedcoreDB.markNotificationAsRead(notificationId);
+    // Refresh the notifications list
+    loadNotifications();
+  } catch (e) {
+    console.error('Failed to mark notification as read:', e);
+  }
+}
+
+function getTimeAgo(date) {
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return `${diffDays}d ago`;
 }
 
 // ===== QUIZ =====

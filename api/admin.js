@@ -83,6 +83,23 @@ module.exports = async function handler(req, res) {
   const si = (v) => (Number.isInteger(Number(v)) ? Number(v) : 0);
   const sb = (v) => v === true || v === 'true' || v === 1;
 
+  // ── Notification helper ─────────────────────────────────────────────────
+  async function createNotifications(type, title, message, relatedId = null, relatedType = null) {
+    // Get all active user IDs
+    const users = await supa('profiles?select=id&status=eq.active');
+    const notifications = users.map(user => ({
+      user_id: user.id,
+      type,
+      title,
+      message,
+      related_id: relatedId,
+      related_type: relatedType,
+    }));
+    if (notifications.length > 0) {
+      await supa('notifications', 'POST', notifications);
+    }
+  }
+
   try {
     switch (action) {
 
@@ -124,6 +141,14 @@ module.exports = async function handler(req, res) {
           premium:     premium !== false,
           created_by:  adminUser.id,
         });
+        // Create notifications for new material
+        await createNotifications(
+          'new_material',
+          'New Study Material Available',
+          `Check out the new ${type} material: "${title}" in ${subject}`,
+          mat[0]?.id || mat.id,
+          'material'
+        );
         return res.status(201).json({ material: mat[0] || mat });
       }
       case 'delete_material': {
@@ -195,6 +220,14 @@ module.exports = async function handler(req, res) {
           link:        s(link, 500) || null,
           created_by:  adminUser.id,
         });
+        // Create notifications for new recommendation
+        await createNotifications(
+          'recommendation',
+          'New Recommendation Added',
+          `Check out this new recommendation: "${title}"`,
+          rec[0]?.id || rec.id,
+          'recommendation'
+        );
         return res.status(201).json({ recommendation: rec[0] || rec });
       }
       case 'delete_recommendation': {
@@ -270,6 +303,14 @@ module.exports = async function handler(req, res) {
           sort_order: si(sort_order),
           tags:       Array.isArray(tags) ? tags.map(t => s(t, 50)) : [],
         });
+        // Create notifications for new lesson
+        await createNotifications(
+          'new_lesson',
+          'New Lesson Published',
+          `A new lesson is now available: "${s(title)}"`,
+          data[0]?.id || data.id,
+          'lesson'
+        );
         return res.status(201).json({ lesson: data[0] || data });
       }
       case 'update_lesson': {
@@ -322,6 +363,14 @@ module.exports = async function handler(req, res) {
           is_premium:  sb(is_premium),
           sort_order:  si(sort_order),
         });
+        // Create notifications for new quiz/question
+        await createNotifications(
+          'new_quiz',
+          'New Quiz Question Added',
+          `New quiz question added: "${s(question, 50)}"`,
+          data[0]?.id || data.id,
+          'quiz'
+        );
         return res.status(201).json({ question: data[0] || data });
       }
       case 'update_question': {
