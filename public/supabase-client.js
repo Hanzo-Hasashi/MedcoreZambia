@@ -367,6 +367,26 @@
     return data || [];
   }
 
+  // ── NOTIFICATIONS ─────────────────────────────────────────
+
+  async function getNotifications(userId) {
+    const { data, error } = await client()
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function markNotificationAsRead(notificationId) {
+    const { error } = await client()
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId);
+    if (error) throw error;
+  }
+
   // ── Admin content helpers (proxied via API) ────────────────
 
   function adminContentCall(action, method = 'GET', body, extraParams = '') {
@@ -410,6 +430,8 @@
     getMaterials, getRecommendations,
     // Content
     getSubjects, getLessons, getQuizQuestions, getFlashcards,
+    // Notifications
+    getNotifications, markNotificationAsRead,
     // Storage
     uploadMaterialFile,
     // AI
