@@ -970,7 +970,7 @@ userGoal:         settings.userGoal     || '',
       <label class="form-lbl">Display Name</label>
       <input class="form-inp" id="setName" value="Your Name">
       <label class="form-lbl">Specialization</label>
-      <select class="form-inp form-select" id="setRole"><option>Medical Student (Year 2)</option><option>Medical Student (Year 3)</option><option>Pre-Med</option><option>Intern / Resident</option></select>
+      <select class="form-inp form-select" id="setRole"><option>Clinical</option><option>Medical Student (Year 3)</option><option>Pre-Med</option><option>Intern / Resident</option></select>
       <label class="form-lbl">Daily Study Goal</label>
       <select class="form-inp form-select" id="setGoal"><option>15 min / day</option><option selected>30 min / day</option><option>60 min / day</option></select>
       <label class="form-lbl">University</label>
@@ -1076,7 +1076,7 @@ userGoal:         settings.userGoal     || '',
           </div>
           <!-- Upgrade CTA for free users — hidden for premium -->
           <div id="dashUpgradeCTA" style="display:none;margin-top:14px">
-            <button onclick="showPaymentInfo()" style="padding:9px 20px;border-radius:99px;background:rgba(232,151,31,.18);border:1.5px solid rgba(232,151,31,.4);color:var(--amber-l);font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s var(--spring-s)" onmouseover="this.style.background='rgba(232,151,31,.28)'" onmouseout="this.style.background='rgba(232,151,31,.18)'">
+            <button onclick="openWhatsAppUpgrade()" style="padding:9px 20px;border-radius:99px;background:rgba(232,151,31,.18);border:1.5px solid rgba(232,151,31,.4);color:var(--amber-l);font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s var(--spring-s)" onmouseover="this.style.background='rgba(232,151,31,.28)'" onmouseout="this.style.background='rgba(232,151,31,.18)'">
               ⭐ Upgrade to Premium — K50/month for full access →
             </button>
           </div>
@@ -1235,7 +1235,7 @@ userGoal:         settings.userGoal     || '',
               <span class="pgate-feat">Worked Solutions</span>
             </div>
             <div class="pgate-actions">
-              <button class="pgate-cta" onclick="showPaymentInfo()">Upgrade — K50/month →</button>
+              <button class="pgate-cta" onclick="openWhatsAppUpgrade()">Upgrade — K50/month →</button>
               <button class="pgate-sub-link" onclick="closeGate('quiz')">Try 3 sample questions</button>
             </div>
           </div>
@@ -1302,7 +1302,7 @@ userGoal:         settings.userGoal     || '',
               <span class="pgate-feat">All 7 Subjects</span>
             </div>
             <div class="pgate-actions">
-              <button class="pgate-cta" onclick="showPaymentInfo()">Upgrade — K50/month →</button>
+              <button class="pgate-cta" onclick="openWhatsAppUpgrade()">Upgrade — K50/month →</button>
               <button class="pgate-sub-link" onclick="closeGate('flashcards')">Use 8 free cards</button>
             </div>
           </div>
@@ -1363,7 +1363,7 @@ userGoal:         settings.userGoal     || '',
               <span class="pgate-feat">💡 Clinical pearls</span>
             </div>
             <div class="pgate-actions">
-              <button class="pgate-cta" onclick="showPaymentInfo()">Upgrade — K50/month →</button>
+              <button class="pgate-cta" onclick="openWhatsAppUpgrade()">Upgrade — K50/month →</button>
               <button class="pgate-sub-link" onclick="closeGate('ai')">Use my 5 free questions</button>
             </div>
           </div>
@@ -3018,6 +3018,13 @@ function showPaymentInfo() {
   ].join('\n');
   // Show in a styled toast chain or open modal
   _showPaymentModal();
+}
+
+function openWhatsAppUpgrade() {
+  const phone = '260976499086';
+  const message = 'Hello MedCore support, I would like to upgrade to MedCore Premium (K50/month). Please grant access to this account.';
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
 }
 
 function _showPaymentModal() {
