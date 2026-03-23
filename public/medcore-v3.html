@@ -4673,12 +4673,11 @@ async function switchContentTab(tab, btn) {
 }
 
 async function _getAdminSubjects() {
-  if (_adminSubjects.length) return _adminSubjects;
   try {
     const { subjects } = await MedcoreDB.admin.listSubjects();
     if (subjects && subjects.length) {
       _adminSubjects = subjects;
-      console.log('[_getAdminSubjects] Loaded subjects:', _adminSubjects);
+      console.log('[_getAdminSubjects] Loaded subjects:', _adminSubjects.length);
     } else {
       console.warn('[_getAdminSubjects] No subjects returned from API');
       _adminSubjects = [];
@@ -4692,10 +4691,24 @@ async function _getAdminSubjects() {
 
 async function populateSubjectDropdowns() {
   console.log('[populateSubjectDropdowns] Starting...');
-  const subjects = (await _getAdminSubjects()) || [];
+  // Clear cache to always fetch fresh
+  _adminSubjects = [];
+  let subjects = (await _getAdminSubjects()) || [];
   if (!subjects.length) {
-    console.warn('[populateSubjectDropdowns] No subjects found, skipping dropdown fill');
-    return;
+    console.warn('[populateSubjectDropdowns] Still no subjects, using fallback core subjects...');
+    // Fallback to core subjects if API completely fails
+    subjects = [
+      { id: 'fallback-1', slug: 'internal-medicine', name: 'Internal Medicine', emoji: '🩺' },
+      { id: 'fallback-2', slug: 'pediatrics', name: 'Pediatrics', emoji: '👶' },
+      { id: 'fallback-3', slug: 'obstetrics-gynecology', name: 'Obstetrics and Gynecology', emoji: '🤰' },
+      { id: 'fallback-4', slug: 'surgery', name: 'Surgery', emoji: '🔪' },
+      { id: 'fallback-5', slug: 'anatomy', name: 'Anatomy', emoji: '🦴' },
+      { id: 'fallback-6', slug: 'physiology', name: 'Physiology', emoji: '❤️' },
+      { id: 'fallback-7', slug: 'biochemistry', name: 'Biochemistry', emoji: '🧬' },
+      { id: 'fallback-8', slug: 'pharmacology', name: 'Pharmacology', emoji: '💊' },
+      { id: 'fallback-9', slug: 'microbiology', name: 'Microbiology', emoji: '🦠' },
+      { id: 'fallback-10', slug: 'clinical-skills', name: 'Clinical Skills', emoji: '🏥' }
+    ];
   }
 
   const idOpts = subjects.map(s => `<option value="${s.id}">${s.emoji ? s.emoji + ' ' : ''}${esc2(s.name)}</option>`).join('');
@@ -4717,7 +4730,10 @@ async function populateSubjectDropdowns() {
   });
 
   const matEl = document.getElementById('matSubject');
-  if (matEl) matEl.innerHTML = '<option value="">Select subject…</option>' + slugOpts;
+  if (matEl) {
+    matEl.innerHTML = '<option value="">Select subject…</option>' + slugOpts;
+    console.log('[populateSubjectDropdowns] Populated matSubject with', subjects.length, 'subjects');
+  }
 
   const matFilterEl = document.getElementById('matFilterSubject');
   if (matFilterEl) matFilterEl.innerHTML = '<option value="">All subjects</option>' + slugOpts;
