@@ -140,7 +140,7 @@ module.exports = async function handler(req, res) {
           return res.status(400).json({ error: 'title, subject, and type are required' });
         }
         if (!await subjectSlugExists(subject)) {
-          return res.status(400).json({ error: 'Subject is not allowed; choose a valid core discipline' });
+          return res.status(400).json({ error: 'Subject not found; choose an existing subject or create it first' });
         }
         const mat = await supa('materials', 'POST', {
           title:       s(title, 200),

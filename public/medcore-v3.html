@@ -1771,6 +1771,8 @@ userGoal:         settings.userGoal     || '',
                       <option value="past_paper">📝 Past Exam Paper</option>
                       <option value="solution">✅ Solutions / Memo</option>
                       <option value="notes">📖 Lecture Notes</option>
+                      <option value="osce">🩺 OSCE Cases</option>
+                      <option value="video">🎬 Video Lecture</option>
                       <option value="guideline">📋 Study Guideline</option>
                       <option value="resource">🔗 External Resource</option>
                     </select>
@@ -1789,10 +1791,10 @@ userGoal:         settings.userGoal     || '',
                       <div id="matDropZone" class="mat-dropzone" onclick="document.getElementById('matFile').click()" ondragover="matDragOver(event)" ondrop="matDrop(event)">
                         <div style="font-size:28px;margin-bottom:6px">📁</div>
                         <div style="font-size:.82rem;font-weight:600;color:var(--ink-2)">Click or drag & drop a file</div>
-                        <div style="font-size:.72rem;color:var(--ink-4);margin-top:3px">PDF, DOC, DOCX, PPT, ZIP</div>
+                        <div style="font-size:.72rem;color:var(--ink-4);margin-top:3px">PDF, DOC/DOCX, PPT/PPTX, MP4/WEBM/MOV, ZIP</div>
                         <div id="matFileName" style="display:none;margin-top:8px;font-size:.78rem;color:var(--forest-m);font-weight:600"></div>
                       </div>
-                      <input type="file" id="matFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.zip" style="display:none" onchange="matFileChosen(this)">
+                      <input type="file" id="matFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.mp4,.webm,.mov,.zip" style="display:none" onchange="matFileChosen(this)">
                       <div style="display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--ink-4)"><div style="flex:1;height:1px;background:var(--border)"></div>or<div style="flex:1;height:1px;background:var(--border)"></div></div>
                       <input class="form-inp" id="matUrl" placeholder="Paste a URL (Google Drive, Dropbox…)" style="margin-bottom:0">
                     </div>
@@ -1808,9 +1810,21 @@ userGoal:         settings.userGoal     || '',
 
               <!-- Materials list -->
               <div class="card">
-                <div class="card-hd">
+                <div class="card-hd" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
                   <span class="sec-title">📚 Uploaded Materials</span>
-                  <span class="chip chip-forest" id="matCountChip" style="font-size:.68rem">0 files</span>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <select id="matFilterType" class="form-inp form-select" style="min-width:150px;font-size:.76rem" onchange="loadAdminMaterials(null, this.value)">
+                      <option value="">All types</option>
+                      <option value="notes">📖 Notes</option>
+                      <option value="past_paper">📝 Past Papers</option>
+                      <option value="osce">🩺 OSCE Cases</option>
+                      <option value="video">🎬 Videos</option>
+                      <option value="solution">✅ Solutions</option>
+                      <option value="guideline">📋 Guidelines</option>
+                      <option value="resource">🔗 Resources</option>
+                    </select>
+                    <span class="chip chip-forest" id="matCountChip" style="font-size:.68rem">0 files</span>
+                  </div>
                 </div>
                 <div id="materialsList" style="padding:6px 0;max-height:600px;overflow-y:auto">
                   <div style="text-align:center;padding:40px;color:var(--ink-4)">
@@ -3579,7 +3593,7 @@ async function downloadMaterial(id, url) {
   }
 }
 
-const MAT_ICONS = { past_paper:'📝', solution:'✅', notes:'📖', guideline:'📋', resource:'🔗' };
+const MAT_ICONS = { past_paper:'📝', solution:'✅', notes:'📖', osce:'🩺', video:'🎬', guideline:'📋', resource:'🔗' };
 function renderMaterials(mats) {
   const el = document.getElementById('materialsList');
   document.getElementById('matCountChip').textContent = mats.length + ' files';
@@ -4460,20 +4474,45 @@ function renderLessonSidebar() {
     }).join('');
   }
 
-  // Materials section
+  // Materials section grouped by type
   if (materials.length) {
-    html += '<div class="mod-section">📚 Materials</div>';
-    html += materials.map(m => {
-      const isLocked = !isPremium && m.premium;
-      const ico = isLocked ? '🔒' : '📄';
-      const title = isLocked ? `${esc(m.title)} (Premium)` : esc(m.title);
-      const clickHandler = isLocked ? '' : `onclick="downloadMaterial('${m.id}', '${esc(m.content_url || '')}')"`;
-      return `<div class="mod-item mat-item" ${clickHandler} style="${isLocked ? 'opacity:0.6' : 'cursor:pointer'}">
-        <span class="mod-ico">${ico}</span>
-        <span class="mod-title">${title}</span>
-        <span class="mod-dur">${m.premium ? '🔐' : '🆓'}</span>
-      </div>`;
-    }).join('');
+    const grouped = materials.reduce((acc, m) => {
+      const type = m.type || 'other';
+      acc[type] = acc[type] || [];
+      acc[type].push(m);
+      return acc;
+    }, {});
+
+    const typeOrder = ['notes','past_paper','osce','video','solution','guideline','resource','other'];
+
+    for (const type of typeOrder) {
+      const bucket = grouped[type] || [];
+      if (!bucket.length) continue;
+
+      const typeLabel = {
+        notes: 'Notes',
+        past_paper: 'Past Papers',
+        osce: 'OSCE Cases',
+        video: 'Videos',
+        solution: 'Solutions',
+        guideline: 'Guidelines',
+        resource: 'Resources',
+        other: 'Other Materials',
+      }[type] || type;
+
+      html += `<div class="mod-section">${MAT_ICONS[type] || '📚'} ${typeLabel}</div>`;
+
+      html += bucket.map(m => {
+        const isLocked = !isPremium && m.premium;
+        const title = isLocked ? `${esc(m.title)} (Premium)` : esc(m.title);
+        const clickHandler = isLocked ? '' : `onclick="downloadMaterial('${m.id}', '${esc(m.content_url || '')}')"`;
+        return `<div class="mod-item mat-item" ${clickHandler} style="${isLocked ? 'opacity:0.6' : 'cursor:pointer'}">
+          <span class="mod-ico">${MAT_ICONS[m.type] || '📄'}</span>
+          <span class="mod-title">${title}</span>
+          <span class="mod-dur">${m.premium ? '🔐' : '🆓'}</span>
+        </div>`;
+      }).join('');
+    }
   }
 
   list.innerHTML = html || '<div style="padding:16px;text-align:center;color:var(--ink-4);font-size:.8rem">No content available</div>';
@@ -4576,17 +4615,18 @@ function nextLesson() {
 
 let _adminSubjects = [];  // cached for dropdowns
 
-function switchContentTab(tab, btn) {
+async function switchContentTab(tab, btn) {
   document.querySelectorAll('.content-sub-tab').forEach(t => t.style.display = 'none');
   document.querySelectorAll('[id^="ctab-"]').forEach(b => b.classList.remove('active'));
   document.getElementById('csub-' + tab).style.display = 'block';
   if (btn) btn.classList.add('active');
+
   // Load data for this sub-tab
-  if (tab === 'subjects')   loadAdminSubjects();
-  if (tab === 'lessons')    { populateSubjectDropdowns(); loadAdminLessons(); }
-  if (tab === 'questions')  { populateSubjectDropdowns(); loadAdminQuestions(); }
-  if (tab === 'flashcards') { populateSubjectDropdowns(); loadAdminFlashcards(); }
-  if (tab === 'materials')  { populateSubjectDropdowns(); loadAdminMaterials(); }
+  if (tab === 'subjects')   await loadAdminSubjects();
+  if (tab === 'lessons')    { await populateSubjectDropdowns(); await loadAdminLessons(); }
+  if (tab === 'questions')  { await populateSubjectDropdowns(); await loadAdminQuestions(); }
+  if (tab === 'flashcards') { await populateSubjectDropdowns(); await loadAdminFlashcards(); }
+  if (tab === 'materials')  { await populateSubjectDropdowns(); await loadAdminMaterials(); }
 }
 
 async function _getAdminSubjects() {
@@ -4602,42 +4642,38 @@ async function _getAdminSubjects() {
   return _adminSubjects;
 }
 
-function populateSubjectDropdowns() {
+async function populateSubjectDropdowns() {
   console.log('[populateSubjectDropdowns] Starting...');
-  // Hardcoded 10 core disciplines
-  const coreSubjects = [
-    { id: 1, slug: 'internal-medicine', name: '🩺 Internal Medicine' },
-    { id: 2, slug: 'pediatrics', name: '👶 Pediatrics' },
-    { id: 3, slug: 'obstetrics-gynecology', name: '🤰 Obstetrics & Gynecology' },
-    { id: 4, slug: 'surgery', name: '🔪 Surgery' },
-    { id: 5, slug: 'anatomy', name: '🦴 Anatomy' },
-    { id: 6, slug: 'physiology', name: '❤️ Physiology' },
-    { id: 7, slug: 'biochemistry', name: '🧬 Biochemistry' },
-    { id: 8, slug: 'pharmacology', name: '💊 Pharmacology' },
-    { id: 9, slug: 'microbiology', name: '🦠 Microbiology' },
-    { id: 10, slug: 'clinical-skills', name: '🏥 Clinical Skills' },
-  ];
-  console.log('[populateSubjectDropdowns] Core subjects:', coreSubjects);
-  
-  const idOpts = coreSubjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-  const slugOpts = coreSubjects.map(s => `<option value="${s.slug}">${s.name}</option>`).join('');
-  console.log('[populateSubjectDropdowns] Generated idOpts:', idOpts.substring(0, 100));
-  
-  ['cl-subject','cq-subject','cf-subject',
-   'cl-filter-subject','cq-filter-subject','cf-filter-subject'].forEach(id => {
-    const el = document.getElementById(id);
-    console.log(`[populateSubjectDropdowns] Looking for #${id}:`, el ? 'FOUND' : 'NOT FOUND');
-    if (!el) return;
-    const isFilter = id.includes('filter');
-    el.innerHTML = (isFilter ? '<option value="">All subjects</option>' : '<option value="">Select subject…</option>') + idOpts;
-    console.log(`[populateSubjectDropdowns] Populated #${id}`);
-  });
-  const matEl = document.getElementById('matSubject');
-  console.log('[populateSubjectDropdowns] Looking for #matSubject:', matEl ? 'FOUND' : 'NOT FOUND');
-  if (matEl) {
-    matEl.innerHTML = '<option value="">Select subject…</option>' + slugOpts;
-    console.log('[populateSubjectDropdowns] Populated #matSubject');
+  const subjects = (await _getAdminSubjects()) || [];
+  if (!subjects.length) {
+    console.warn('[populateSubjectDropdowns] No subjects found, skipping dropdown fill');
+    return;
   }
+
+  const idOpts = subjects.map(s => `<option value="${s.id}">${s.emoji ? s.emoji + ' ' : ''}${esc2(s.name)}</option>`).join('');
+  const slugOpts = subjects.map(s => `<option value="${s.slug}">${s.emoji ? s.emoji + ' ' : ''}${esc2(s.name)}</option>`).join('');
+
+  const inputMap = [
+    { id: 'cl-subject',   isFilter: false },
+    { id: 'cq-subject',   isFilter: false },
+    { id: 'cf-subject',   isFilter: false },
+    { id: 'cl-filter-subject', isFilter: true },
+    { id: 'cq-filter-subject', isFilter: true },
+    { id: 'cf-filter-subject', isFilter: true },
+  ];
+
+  inputMap.forEach(({ id, isFilter }) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = (isFilter ? '<option value="">All subjects</option>' : '<option value="">Select subject…</option>') + idOpts;
+  });
+
+  const matEl = document.getElementById('matSubject');
+  if (matEl) matEl.innerHTML = '<option value="">Select subject…</option>' + slugOpts;
+
+  const matFilterEl = document.getElementById('matFilterSubject');
+  if (matFilterEl) matFilterEl.innerHTML = '<option value="">All subjects</option>' + slugOpts;
+
   console.log('[populateSubjectDropdowns] Done');
 }
 
@@ -4721,19 +4757,24 @@ async function loadAdminLessons(subjectId) {
   } catch(e) { el.innerHTML = `<div style="padding:16px;color:var(--crimson);font-size:.82rem">${esc(e.message)}</div>`; }
 }
 
-async function loadAdminMaterials(subject) {
+async function loadAdminMaterials(subject, type) {
   const el = document.getElementById('materialsList');
   if (!el) return;
   el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--ink-4)">Loading…</div>';
   try {
     const { materials } = await MedcoreDB.admin.listMaterials();
-    const filtered = subject ? materials.filter(m => m.subject === subject) : materials;
+    const filtered = materials.filter(m => {
+      const bySubject = subject ? m.subject === subject : true;
+      const byType = type ? m.type === type : true;
+      return bySubject && byType;
+    });
+    document.getElementById('matCountChip').textContent = `${filtered.length} files`;
+
     if (!filtered.length) {
-      el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:.85rem">No materials yet.</div>';
-      document.getElementById('matCountChip').textContent = '0 files';
+      el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:.85rem">No materials match the selected filters.</div>';
       return;
     }
-    document.getElementById('matCountChip').textContent = `${filtered.length} files`; 
+
     el.innerHTML = filtered.map(m => {
       const isPaid = m.premium !== undefined ? m.premium : false;
       const uploaded = m.created_at ? new Date(m.created_at).toLocaleDateString() : '';
@@ -4741,7 +4782,7 @@ async function loadAdminMaterials(subject) {
         <div class="mat-item-ico">${MAT_ICONS[m.type] || '📄'}</div>
         <div style="flex:1;min-width:0">
           <div class="mat-item-title">${esc2(m.title)}</div>
-          <div class="mat-item-sub">${esc2(m.subject)} · ${isPaid?'🔐 Premium':'🆓 Free'} · ${uploaded}</div>
+          <div class="mat-item-sub">${esc2(m.subject)} · ${m.type || 'material'} · ${isPaid?'🔐 Premium':'🆓 Free'} · ${uploaded}</div>
           ${m.content_url ? `<a href="${esc2(m.content_url)}" target="_blank" style="font-size:.73rem;color:var(--forest-m);font-weight:500">🔗 Open</a>` : ''}
         </div>
         <button class="mat-del-btn" onclick="deleteMaterial('${m.id}')">Delete</button>

@@ -31,27 +31,18 @@ ON CONFLICT (slug) DO UPDATE
       sort_order = EXCLUDED.sort_order,
       updated_at = NOW();
 
--- Delete all non-core subjects (cascade lessons, questions, flashcards)
-DELETE FROM public.subjects
-WHERE slug NOT IN (
-  'internal-medicine','pediatrics','obstetrics-gynecology','surgery',
-  'anatomy','physiology','biochemistry','pharmacology','microbiology','clinical-skills'
-);
+-- Keep existing subjects/materials/recommendations to support custom curricula.
+-- The legacy core discipline cleanup has been removed to avoid accidentally deleting non-core data.
+-- If strict core-only enforcement is required, re-enable filtering with explicit review.
 
--- Remove all materials/recommendations that are not assigned to core discipline slugs.
+-- Remove all materials/recommendations that have missing or invalid subject reference (data hygiene)
 DELETE FROM public.materials
 WHERE subject IS NULL
-   OR subject NOT IN (
-     'internal-medicine','pediatrics','obstetrics-gynecology','surgery',
-     'anatomy','physiology','biochemistry','pharmacology','microbiology','clinical-skills'
-   );
+   OR NOT EXISTS (SELECT 1 FROM public.subjects WHERE slug = public.materials.subject);
 
 DELETE FROM public.recommendations
 WHERE subject IS NOT NULL
-  AND subject NOT IN (
-     'internal-medicine','pediatrics','obstetrics-gynecology','surgery',
-     'anatomy','physiology','biochemistry','pharmacology','microbiology','clinical-skills'
-  );
+  AND NOT EXISTS (SELECT 1 FROM public.subjects WHERE slug = public.recommendations.subject);
 
 -- Validation trigger: ensure materials/recommendations reference existing subject slug.
 CREATE OR REPLACE FUNCTION public.validate_subject_slug_exists()
