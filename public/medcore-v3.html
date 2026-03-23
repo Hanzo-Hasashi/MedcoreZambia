@@ -4594,7 +4594,11 @@ async function _getAdminSubjects() {
   try {
     const { subjects } = await MedcoreDB.admin.listSubjects();
     _adminSubjects = subjects || [];
-  } catch { _adminSubjects = []; }
+    console.log('[_getAdminSubjects] Loaded subjects:', _adminSubjects);
+  } catch (e) {
+    console.error('[_getAdminSubjects] Error:', e);
+    _adminSubjects = [];
+  }
   return _adminSubjects;
 }
 
