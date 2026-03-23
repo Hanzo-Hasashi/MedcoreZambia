@@ -4602,7 +4602,8 @@ async function _getAdminSubjects() {
   return _adminSubjects;
 }
 
-async function populateSubjectDropdowns() {
+function populateSubjectDropdowns() {
+  console.log('[populateSubjectDropdowns] Starting...');
   // Hardcoded 10 core disciplines
   const coreSubjects = [
     { id: 1, slug: 'internal-medicine', name: '🩺 Internal Medicine' },
@@ -4616,20 +4617,28 @@ async function populateSubjectDropdowns() {
     { id: 9, slug: 'microbiology', name: '🦠 Microbiology' },
     { id: 10, slug: 'clinical-skills', name: '🏥 Clinical Skills' },
   ];
+  console.log('[populateSubjectDropdowns] Core subjects:', coreSubjects);
   
-  const idOpts = coreSubjects.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
-  const slugOpts = coreSubjects.map(s => `<option value="${s.slug}">${esc(s.name)}</option>`).join('');
+  const idOpts = coreSubjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  const slugOpts = coreSubjects.map(s => `<option value="${s.slug}">${s.name}</option>`).join('');
+  console.log('[populateSubjectDropdowns] Generated idOpts:', idOpts.substring(0, 100));
+  
   ['cl-subject','cq-subject','cf-subject',
    'cl-filter-subject','cq-filter-subject','cf-filter-subject'].forEach(id => {
     const el = document.getElementById(id);
+    console.log(`[populateSubjectDropdowns] Looking for #${id}:`, el ? 'FOUND' : 'NOT FOUND');
     if (!el) return;
     const isFilter = id.includes('filter');
     el.innerHTML = (isFilter ? '<option value="">All subjects</option>' : '<option value="">Select subject…</option>') + idOpts;
+    console.log(`[populateSubjectDropdowns] Populated #${id}`);
   });
   const matEl = document.getElementById('matSubject');
+  console.log('[populateSubjectDropdowns] Looking for #matSubject:', matEl ? 'FOUND' : 'NOT FOUND');
   if (matEl) {
     matEl.innerHTML = '<option value="">Select subject…</option>' + slugOpts;
+    console.log('[populateSubjectDropdowns] Populated #matSubject');
   }
+  console.log('[populateSubjectDropdowns] Done');
 }
 
 // ── Subjects CRUD ─────────────────────────────────────────────────────
