@@ -4673,8 +4673,10 @@ async function switchContentTab(tab, btn) {
 }
 
 async function _getAdminSubjects() {
+  console.log('[_getAdminSubjects] Starting fetch...');
   try {
     const { subjects } = await MedcoreDB.admin.listSubjects();
+    console.log('[_getAdminSubjects] API response:', { subjects: subjects ? subjects.length : 0, subjects });
     if (subjects && subjects.length) {
       _adminSubjects = subjects;
       console.log('[_getAdminSubjects] Loaded subjects:', _adminSubjects.length);
@@ -4686,6 +4688,7 @@ async function _getAdminSubjects() {
     console.error('[_getAdminSubjects] Error:', e);
     _adminSubjects = [];
   }
+  console.log('[_getAdminSubjects] Returning:', _adminSubjects.length, 'subjects');
   return _adminSubjects;
 }
 
@@ -4694,6 +4697,8 @@ async function populateSubjectDropdowns() {
   // Clear cache to always fetch fresh
   _adminSubjects = [];
   let subjects = (await _getAdminSubjects()) || [];
+  console.log('[populateSubjectDropdowns] Fetched subjects:', subjects.length, subjects);
+
   if (!subjects.length) {
     console.warn('[populateSubjectDropdowns] Still no subjects, using fallback core subjects...');
     // Fallback to core subjects if API completely fails
@@ -4713,6 +4718,7 @@ async function populateSubjectDropdowns() {
 
   const idOpts = subjects.map(s => `<option value="${s.id}">${s.emoji ? s.emoji + ' ' : ''}${esc2(s.name)}</option>`).join('');
   const slugOpts = subjects.map(s => `<option value="${s.slug}">${s.emoji ? s.emoji + ' ' : ''}${esc2(s.name)}</option>`).join('');
+  console.log('[populateSubjectDropdowns] Generated slugOpts:', slugOpts.substring(0, 200) + '...');
 
   const inputMap = [
     { id: 'cl-subject',   isFilter: false },
@@ -4733,6 +4739,26 @@ async function populateSubjectDropdowns() {
   if (matEl) {
     matEl.innerHTML = '<option value="">Select subject…</option>' + slugOpts;
     console.log('[populateSubjectDropdowns] Populated matSubject with', subjects.length, 'subjects');
+    console.log('[populateSubjectDropdowns] matSubject innerHTML length:', matEl.innerHTML.length);
+    // Also log the actual options
+    const options = matEl.querySelectorAll('option');
+    console.log('[populateSubjectDropdowns] matSubject options:', options.length);
+    if (options.length > 1) {
+      console.log('[populateSubjectDropdowns] First few options:', Array.from(options).slice(0, 3).map(opt => opt.textContent));
+    }
+    // Visual indicator - temporarily change border color to green
+    const originalBorder = matEl.style.borderColor;
+    matEl.style.borderColor = 'var(--forest-m)';
+    matEl.style.borderWidth = '2px';
+    setTimeout(() => {
+      matEl.style.borderColor = originalBorder;
+      matEl.style.borderWidth = '';
+    }, 3000);
+  } else {
+    console.error('[populateSubjectDropdowns] matSubject element not found! Available elements:', document.querySelectorAll('[id*="subject"]').length);
+    // Try to find similar elements
+    const possibleEls = document.querySelectorAll('[id*="subject"]');
+    console.log('[populateSubjectDropdowns] Possible subject elements:', Array.from(possibleEls).map(el => el.id));
   }
 
   const matFilterEl = document.getElementById('matFilterSubject');
