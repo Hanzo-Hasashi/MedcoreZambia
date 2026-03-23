@@ -4603,9 +4603,22 @@ async function _getAdminSubjects() {
 }
 
 async function populateSubjectDropdowns() {
-  const subjects = await _getAdminSubjects();
-  const idOpts = subjects.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
-  const slugOpts = subjects.map(s => `<option value="${s.slug}">${esc(s.name)}</option>`).join('');
+  // Hardcoded 10 core disciplines
+  const coreSubjects = [
+    { id: 1, slug: 'internal-medicine', name: '🩺 Internal Medicine' },
+    { id: 2, slug: 'pediatrics', name: '👶 Pediatrics' },
+    { id: 3, slug: 'obstetrics-gynecology', name: '🤰 Obstetrics & Gynecology' },
+    { id: 4, slug: 'surgery', name: '🔪 Surgery' },
+    { id: 5, slug: 'anatomy', name: '🦴 Anatomy' },
+    { id: 6, slug: 'physiology', name: '❤️ Physiology' },
+    { id: 7, slug: 'biochemistry', name: '🧬 Biochemistry' },
+    { id: 8, slug: 'pharmacology', name: '💊 Pharmacology' },
+    { id: 9, slug: 'microbiology', name: '🦠 Microbiology' },
+    { id: 10, slug: 'clinical-skills', name: '🏥 Clinical Skills' },
+  ];
+  
+  const idOpts = coreSubjects.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  const slugOpts = coreSubjects.map(s => `<option value="${s.slug}">${esc(s.name)}</option>`).join('');
   ['cl-subject','cq-subject','cf-subject',
    'cl-filter-subject','cq-filter-subject','cf-filter-subject'].forEach(id => {
     const el = document.getElementById(id);
