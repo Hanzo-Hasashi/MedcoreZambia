@@ -253,7 +253,31 @@ module.exports = async function handler(req, res) {
 
       // ══ SUBJECTS ═════════════════════════════════════════════════════════
       case 'list_subjects': {
-        const data = await supa('subjects?select=*&order=sort_order.asc');
+        let data = await supa('subjects?select=*&order=sort_order.asc');
+        // Ensure core subjects exist if table is empty
+        if (!data || data.length === 0) {
+          console.log('[list_subjects] No subjects found, inserting core subjects...');
+          const coreSubjects = [
+            { name: 'Internal Medicine', slug: 'internal-medicine', emoji: '🩺', description: 'Comprehensive adult medical care.', color_from: '#18324f', color_to: '#1a4a72', chip_class: 'chip-forest', sort_order: 0 },
+            { name: 'Pediatrics', slug: 'pediatrics', emoji: '👶', description: 'Child health and disease management.', color_from: '#1f4f3c', color_to: '#2f8f5f', chip_class: 'chip-forest', sort_order: 1 },
+            { name: 'Obstetrics and Gynecology', slug: 'obstetrics-gynecology', emoji: '🤰', description: 'Pregnancy, childbirth, and women\'s reproductive health.', color_from: '#5a2e3f', color_to: '#934f6b', chip_class: 'chip-crim', sort_order: 2 },
+            { name: 'Surgery', slug: 'surgery', emoji: '🔪', description: 'Surgical disciplines including perioperative care.', color_from: '#4f2a1a', color_to: '#8e5233', chip_class: 'chip-amber', sort_order: 3 },
+            { name: 'Anatomy', slug: 'anatomy', emoji: '🦴', description: 'Structural foundations of the human body.', color_from: '#1a4332', color_to: '#0f2a1e', chip_class: 'chip-forest', sort_order: 4 },
+            { name: 'Physiology', slug: 'physiology', emoji: '❤️', description: 'Function and systems control in the human body.', color_from: '#0d2a20', color_to: '#071a13', chip_class: 'chip-forest', sort_order: 5 },
+            { name: 'Biochemistry', slug: 'biochemistry', emoji: '🧬', description: 'Molecular and metabolic pathways.', color_from: '#1a1a4a', color_to: '#0d0d2e', chip_class: 'chip-sapp', sort_order: 6 },
+            { name: 'Pharmacology', slug: 'pharmacology', emoji: '💊', description: 'Drug mechanisms and therapeutics.', color_from: '#0a2a2a', color_to: '#051515', chip_class: 'chip-amber', sort_order: 7 },
+            { name: 'Microbiology', slug: 'microbiology', emoji: '🦠', description: 'Infectious agents and host interactions.', color_from: '#0d2a0d', color_to: '#071507', chip_class: 'chip-forest', sort_order: 8 },
+            { name: 'Clinical Skills', slug: 'clinical-skills', emoji: '🏥', description: 'Examination, communication and procedural skills.', color_from: '#2e1a2d', color_to: '#4f3152', chip_class: 'chip-crim', sort_order: 9 }
+          ];
+          for (const subj of coreSubjects) {
+            try {
+              await supa('subjects', 'POST', subj);
+            } catch (e) {
+              console.error(`[list_subjects] Failed to insert ${subj.name}:`, e);
+            }
+          }
+          data = await supa('subjects?select=*&order=sort_order.asc');
+        }
         return res.status(200).json({ subjects: data });
       }
       case 'add_subject': {
