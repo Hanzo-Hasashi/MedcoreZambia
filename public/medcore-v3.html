@@ -1795,6 +1795,7 @@ userGoal:         settings.userGoal     || '',
                         <div id="matFileName" style="display:none;margin-top:8px;font-size:.78rem;color:var(--forest-m);font-weight:600"></div>
                       </div>
                       <input type="file" id="matFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.mp4,.webm,.mov,.zip" style="display:none" onchange="matFileChosen(this)">
+                      <button class="btn btn-ghost btn-sm" type="button" style="width:fit-content" onclick="clearMatFile()">✕ Clear selected file</button>
                       <div style="display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--ink-4)"><div style="flex:1;height:1px;background:var(--border)"></div>or<div style="flex:1;height:1px;background:var(--border)"></div></div>
                       <input class="form-inp" id="matUrl" placeholder="Paste a URL (Google Drive, Dropbox…)" style="margin-bottom:0">
                     </div>
@@ -3475,6 +3476,21 @@ function matDrop(e) {
   nameEl.textContent = `📎 ${f.name} (${(f.size/1024).toFixed(0)} KB)`;
   nameEl.style.display = 'block';
 }
+function clearMatFile() {
+  matFileData = null;
+  const fileInput = document.getElementById('matFile');
+  if (fileInput) fileInput.value = '';
+  const nameEl = document.getElementById('matFileName');
+  if (nameEl) {
+    nameEl.textContent = '';
+    nameEl.style.display = 'none';
+  }
+  const dropzone = document.getElementById('matDropZone');
+  if (dropzone) {
+    dropzone.style.borderColor = '';
+    dropzone.classList.remove('drag-over');
+  }
+}
 async function uploadMaterial() {
   if (!requireAdmin()) return;
   const title      = document.getElementById('matTitle').value.trim();
@@ -3516,9 +3532,7 @@ async function uploadMaterial() {
     document.getElementById('matSubject').selectedIndex = 0;
     document.getElementById('matType').selectedIndex = 0;
     document.getElementById('matFreeAccess').checked = false;
-    document.getElementById('matFileName').style.display = 'none';
-    document.getElementById('matDropZone').style.borderColor = '';
-    matFileData = null;
+    clearMatFile();
     if (uploadBtn) uploadBtn.textContent = origText;
     refreshAdmin();
     showToast('📤 Uploaded', `"${esc2(title)}" added successfully`);
