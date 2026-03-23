@@ -1124,11 +1124,8 @@ userGoal:         settings.userGoal     || '',
             <div class="card stagger" style="--i:6">
               <div class="card-hd"><span class="sec-title">🎯 Recommendations</span></div>
               <div class="card-bd">
-                <p style="font-size:.78rem;color:var(--ink-3);margin-bottom:11px">Based on your quiz performance:</p>
-                <div style="display:flex;flex-direction:column;gap:7px">
-                  <button class="btn btn-outline btn-sm" style="justify-content:flex-start;width:100%;font-weight:500" onclick="nav('quiz')">🧪 Renal Physiology (missed 4/6)</button>
-                  <button class="btn btn-outline btn-sm" style="justify-content:flex-start;width:100%;font-weight:500" onclick="nav('flashcards')">🃏 14 flashcards due today</button>
-                  <button class="btn btn-outline btn-sm" style="justify-content:flex-start;width:100%;font-weight:500" onclick="nav('ai')">🤖 Ask AI about Cardiac APs</button>
+                <div id="dashRecommendations" style="display:flex;flex-direction:column;gap:7px">
+                  <div style="color:var(--ink-4);font-size:.82rem">Loading recommendations...</div>
                 </div>
               </div>
             </div>
@@ -1946,7 +1943,7 @@ let S = {
   qFilter:'all', qDiff:'all',
   streak:0, bestStreak:0,
   lessonsCompleted:0,
-  subjectProgress:{ anatomy:0, physiology:0, biochemistry:0, pharmacology:0, microbiology:0, 'internal-medicine':0, pediatrics:0, 'obstetrics-gynecology':0, surgery:0, 'clinical-skills':0 },
+  subjectProgress:{},
   lastStudyDate: null,
 };
 
@@ -2369,22 +2366,24 @@ function updateDashboard(){
   const lbXP = document.getElementById('dashLbXP');
   if(lbXP) lbXP.textContent = _xp.toLocaleString();
 
-  // Update subject progress bars and labels from state
-  const sp = Object.assign({
-    anatomy:0, physiology:0, biochemistry:0,
-    pharmacology:0, microbiology:0, 'internal-medicine':0, pediatrics:0,
-    'obstetrics-gynecology':0, surgery:0, 'clinical-skills':0
-  }, S.subjectProgress || {});
+  // Update subject progress bars and labels from state (dynamic subject list)
+  const subjects = _contentCache.subjects || [];
+  const sp = Object.assign({}, S.subjectProgress || {});
+  subjects.forEach(s => {
+    if (!sp.hasOwnProperty(s.slug)) sp[s.slug] = 0;
+  });
   document.querySelectorAll('[data-subject]').forEach(bar => {
     const subj = bar.dataset.subject;
-    if(sp[subj] !== undefined) {
+    if(subj && sp.hasOwnProperty(subj)) {
       bar.style.width = sp[subj] + '%';
       bar.dataset.w = sp[subj];
-      // Update label if exists
       const lbl = document.getElementById('sp-'+subj+'-pct');
       if(lbl) lbl.textContent = sp[subj] + '%';
     }
   });
+
+  // Update state with any new subjects so progress gets persisted
+  S.subjectProgress = sp;
 
   // Update sidebar XP
   document.getElementById('sbXPVal').textContent = _xp.toLocaleString();
@@ -2397,6 +2396,9 @@ function updateDashboard(){
 
   // Dynamically populate dashboard lesson rows from database
   loadDashboardLessons();
+
+  // Dynamically populate recommendations from DB
+  loadDashboardRecommendations();
 
   // Refresh leaderboard from Supabase
   if (currentUser) loadLeaderboard();
@@ -2426,6 +2428,33 @@ async function loadDashboardLessons() {
   } catch(e) {
     console.error('Failed to load dashboard lessons:', e);
     container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-4)">Error loading lessons</div>';
+  }
+}
+
+// Load personalized recommendations (from recommended library or admin mentions)
+async function loadDashboardRecommendations() {
+  const container = document.getElementById('dashRecommendations');
+  if (!container) return;
+  try {
+    const recs = await MedcoreDB.getRecommendations();
+    if (!recs || !recs.length) {
+      container.innerHTML = '<div style="color:var(--ink-4);font-size:.82rem">No recommendations available yet.</div>';
+      return;
+    }
+    const filtered = recs
+      .filter(r => !r.is_deleted && (!r.subject || (r.subject && !_contentCache.subjects ? true : (_contentCache.subjects||[]).some(s=>s.slug===r.subject))))
+      .slice(0, 4);
+    container.innerHTML = filtered.map(r => {
+      const title = esc2(r.title || 'Recommendation');
+      const sub = r.subject ? ` — ${esc2(r.subject)}` : '';
+      if (r.link) {
+        return `<a class="btn btn-outline btn-sm" href="${esc2(r.link)}" target="_blank" style="justify-content:flex-start;width:100%;font-weight:500">${title}${sub}</a>`;
+      }
+      return `<button class="btn btn-outline btn-sm" onclick="nav('subjects')" style="justify-content:flex-start;width:100%;font-weight:500">${title}${sub}</button>`;
+    }).join('');
+  } catch (e) {
+    console.error('[loadDashboardRecommendations]', e);
+    container.innerHTML = '<div style="color:var(--crimson);font-size:.82rem">Failed to load recommendations</div>';
   }
 }
 
