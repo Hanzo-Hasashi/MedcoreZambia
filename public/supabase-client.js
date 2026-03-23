@@ -289,7 +289,18 @@
     const safeName = file.name.replace(/[^\w\s\-.()\[\]]/g, '_').replace(/\s+/g, '_');
     const storagePath = `${subject}/${timestamp}_${safeName}`;
 
-    console.log('[uploadMaterialFile] Starting upload:', { storagePath, fileSize: file.size, fileType: file.type });
+    console.log('[uploadMaterialFile] Starting upload:', {
+      storagePath,
+      fileSize: file.size,
+      fileType: file.type,
+      originalName: file.name
+    });
+
+    // Check file size (50MB limit)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      throw new Error(`File too large: ${file.size} bytes. Maximum allowed: ${maxSize} bytes (50MB)`);
+    }
 
     // Upload to 'materials' bucket
     const { data, error } = await client().storage
@@ -317,10 +328,24 @@
 
     if (urlError) {
       console.error('[uploadMaterialFile] Signed URL error:', urlError);
+      // Try to clean up the uploaded file
+      try {
+        await client().storage.from('materials').remove([data.path]);
+        console.log('[uploadMaterialFile] Cleaned up failed upload');
+      } catch (cleanupError) {
+        console.error('[uploadMaterialFile] Cleanup failed:', cleanupError);
+      }
       throw new Error(`Failed to generate signed URL: ${urlError.message}`);
     }
     if (!signedUrlData) {
       console.error('[uploadMaterialFile] Signed URL returned no data');
+      // Try to clean up the uploaded file
+      try {
+        await client().storage.from('materials').remove([data.path]);
+        console.log('[uploadMaterialFile] Cleaned up failed upload');
+      } catch (cleanupError) {
+        console.error('[uploadMaterialFile] Cleanup failed:', cleanupError);
+      }
       throw new Error('Failed to generate signed URL');
     }
 

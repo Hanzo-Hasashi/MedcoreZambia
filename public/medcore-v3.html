@@ -3540,10 +3540,25 @@ async function uploadMaterial() {
     if (matFileData) {
       if (uploadBtn) uploadBtn.textContent = '⏳ Uploading file...';
       try {
+        console.log('[uploadMaterial] Starting file upload:', {
+          fileName: matFileData.name,
+          fileSize: matFileData.size,
+          fileType: matFileData.type,
+          subject: subject
+        });
         url = await MedcoreDB.uploadMaterialFile(matFileData, subject);
         console.log('[uploadMaterial] File uploaded successfully, URL:', url);
       } catch(uploadErr) {
         console.error('[uploadMaterial] File upload failed:', uploadErr);
+        console.error('[uploadMaterial] Error details:', {
+          message: uploadErr.message,
+          stack: uploadErr.stack,
+          fileInfo: matFileData ? {
+            name: matFileData.name,
+            size: matFileData.size,
+            type: matFileData.type
+          } : 'No file data'
+        });
         showToast('⚠️ Upload failed', uploadErr.message || 'Could not upload file. Check browser console for details.');
         if (uploadBtn) uploadBtn.textContent = origText;
         throw uploadErr;

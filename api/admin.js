@@ -251,7 +251,98 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ ok: true });
       }
 
-      // ══ SUBJECTS ═════════════════════════════════════════════════════════
+      // ══ MIGRATIONS ═════════════════════════════════════════════════════
+      case 'run_migration': {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+        const { migration_name } = req.body || {};
+        if (!migration_name) return res.status(400).json({ error: 'migration_name required' });
+
+        console.log(`[run_migration] Executing migration: ${migration_name}`);
+
+        try {
+          // For now, handle storage bucket creation
+          if (migration_name === '005_storage_buckets') {
+            // Create the materials bucket via SQL
+            const createBucketSQL = `
+              INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+              VALUES (
+                'materials',
+                'materials',
+                false,
+                52428800,
+                ARRAY[
+                  'application/pdf',
+                  'application/msword',
+                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                  'application/vnd.ms-powerpoint',
+                  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                  'application/vnd.ms-excel',
+                  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                  'text/plain',
+                  'image/jpeg',
+                  'image/png',
+                  'image/gif',
+                  'video/mp4',
+                  'video/avi',
+                  'video/mov'
+                ]
+              ) ON CONFLICT (id) DO NOTHING;
+            `;
+
+            // Execute the bucket creation
+            await supa('rpc/exec_sql', 'POST', { sql: createBucketSQL });
+
+            // Enable RLS and create policies
+            const policiesSQL = `
+              ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+              DROP POLICY IF EXISTS "Public access to materials" ON storage.objects;
+              CREATE POLICY "Public access to materials"
+                ON storage.objects FOR SELECT
+                USING (bucket_id = 'materials');
+
+              DROP POLICY IF EXISTS "Authenticated users can upload materials" ON storage.objects;
+              CREATE POLICY "Authenticated users can upload materials"
+                ON storage.objects FOR INSERT
+                WITH CHECK (
+                  bucket_id = 'materials' AND
+                  auth.role() = 'authenticated'
+                );
+
+              DROP POLICY IF EXISTS "Admins can delete materials" ON storage.objects;
+              CREATE POLICY "Admins can delete materials"
+                ON storage.objects FOR DELETE
+                USING (
+                  bucket_id = 'materials' AND
+                  EXISTS (
+                    SELECT 1 FROM public.profiles
+                    WHERE id = auth.uid() AND role = 'admin'
+                  )
+                );
+
+              DROP POLICY IF EXISTS "Admins can update materials" ON storage.objects;
+              CREATE POLICY "Admins can update materials"
+                ON storage.objects FOR UPDATE
+                USING (
+                  bucket_id = 'materials' AND
+                  EXISTS (
+                    SELECT 1 FROM public.profiles
+                    WHERE id = auth.uid() AND role = 'admin'
+                  )
+                );
+            `;
+
+            await supa('rpc/exec_sql', 'POST', { sql: policiesSQL });
+
+            return res.status(200).json({ success: true, message: 'Storage bucket created successfully' });
+          }
+
+          return res.status(400).json({ error: `Unknown migration: ${migration_name}` });
+        } catch (e) {
+          console.error(`[run_migration] Failed:`, e);
+          return res.status(500).json({ error: `Migration failed: ${e.message}` });
+        }
+      }
       case 'list_subjects': {
         let data = await supa('subjects?select=*&order=sort_order.asc');
         // Ensure core subjects exist if table is empty
