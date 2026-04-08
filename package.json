@@ -1,0 +1,20 @@
+{
+  "name": "medcore-zambia",
+  "version": "3.0.0",
+  "description": "MedCore Zambia — Medical learning platform for UNZA, CBU & Levy students.",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev-server.js",
+    "build": "node scripts/inject-env.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.100.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "supabase": "^2.83.0"
+  }
+}
