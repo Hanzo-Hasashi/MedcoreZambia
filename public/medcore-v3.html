@@ -2338,16 +2338,27 @@ async function loadDashboardLessons() {
   if (!container) return;
   
   try {
-    const lessons = (_contentCache.lessons?.slice(0, 4)) || (await MedcoreDB.getLessons()).slice(0, 4);
+    // Get lessons from cache or fetch them
+    let lessons = _contentCache.lessons;
+    
+    // Handle case where lessons might be an object (subject cache) instead of array
+    if (!Array.isArray(lessons)) {
+      lessons = await MedcoreDB.getLessons();
+      _contentCache.lessons = lessons;
+    }
+    
     if (!lessons || lessons.length === 0) {
       container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-4)">No lessons available yet.</div>';
       return;
     }
     
-    container.innerHTML = lessons.map((l, i) => {
+    // Take first 4 lessons for dashboard
+    const dashboardLessons = lessons.slice(0, 4);
+    
+    container.innerHTML = dashboardLessons.map((l, i) => {
       const subj = _contentCache.subjects?.find(s => s.id === l.subject_id);
       const prog = S.subjectProgress?.[subj?.slug || 'general'] || 0;
-      const isBorder = i === lessons.length - 1 ? ';border-bottom:none' : '';
+      const isBorder = i === dashboardLessons.length - 1 ? ';border-bottom:none' : '';
       return `<div class="lesson-row" onclick="nav('lesson')" style="cursor:pointer${isBorder}"><div class="lesson-thumb" style="background:linear-gradient(135deg,${subj?.color_from || '#1a4332'},${subj?.color_to || '#0f2a1e'})">${subj?.emoji || '📚'}</div><div style="flex:1;min-width:0"><div class="lesson-title">${l.title}</div><div class="lesson-meta-t">${subj?.name || 'Course'} · ${l.duration || ''}</div><div class="prog-track" style="margin-top:5px"><div class="prog-fill pf-forest" data-w="${prog}" style="width:${prog}%"></div></div></div><div class="lesson-pct">${prog}%</div></div>`;
     }).join('');
   } catch(e) {
@@ -4197,7 +4208,7 @@ async function saveAdminData(data) {
 // ════════════════════════════════════════════════════════════════════
 
 // In-memory cache — reset on sign-out
-let _contentCache = { subjects: null, lessons: {}, questions: null, flashcards: null, materials: {} };
+let _contentCache = { subjects: null, lessons: null, lessonsBySubject: {}, questions: null, flashcards: null, materials: {} };
 let _currentSubjectId = null;   // which subject the lesson view is showing
 
 // ── Load all content needed for the app ──────────────────────────────
@@ -4390,10 +4401,10 @@ async function openSubject(subjectId, subjectName) {
     nav('lesson');
 
     // Fetch lessons for this subject
-    let lessons = _contentCache.lessons[subjectId];
+    let lessons = _contentCache.lessonsBySubject[subjectId];
     if (!lessons) {
       lessons = await MedcoreDB.getLessons(subjectId);
-      _contentCache.lessons[subjectId] = lessons;
+      _contentCache.lessonsBySubject[subjectId] = lessons;
     }
 
     // Fetch materials for this subject
