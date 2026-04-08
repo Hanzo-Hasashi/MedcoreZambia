@@ -1033,7 +1033,7 @@ userGoal:         settings.userGoal     || '',
     <div class="sb-user">
       <div class="sb-ucard" onclick="nav('profile')">
         <div class="sb-av" id="sbAv">AJ</div>
-        <div><div class="sb-uname" id="sbUserName">Alex Johnson</div><div class="sb-urole" id="sbUserRole">Med Student · Year 2</div></div>
+        <div><div class="sb-uname" id="sbUserName">Loading...</div><div class="sb-urole" id="sbUserRole">Med Student · Year 2</div></div>
         <div class="sb-xp">⚡<span id="sbXPVal">0</span></div>
       </div>
     </div>
@@ -1397,8 +1397,8 @@ userGoal:         settings.userGoal     || '',
             <div class="profile-badge-r">🔥</div>
           </div>
           <div style="flex:1;--i:1">
-            <div class="profile-name" id="profileName">Alex Johnson</div>
-            <div class="profile-handle" id="profileHandle">@alexjohnson · Member since Jan 2024</div>
+            <div class="profile-name" id="profileName">Loading...</div>
+            <div class="profile-handle" id="profileHandle">@student · Member since 2024</div>
            <div class="profile-tags" id="profileTags"><span class="profile-tag">🏥 Med Student Year 2</span></div>
 <div style="font-size:.84rem;color:var(--ink-3)" id="profileBio">Aspiring cardiologist. Learning something new every day.</div>
             <div class="p-stats">
@@ -3872,10 +3872,8 @@ async function _handleSupabaseUser(sbUser) {
     _xp = 0;
   }
 
-  // Ensure userName is set from auth (never defaults to 'Alex Johnson')
-  if (!S.userName || S.userName === 'Alex Johnson') {
-    S.userName = currentUser.name;
-  }
+  // Ensure userName is set from auth
+  S.userName = currentUser.name;
 
   // Load completed lessons
   try {
@@ -3891,10 +3889,10 @@ async function _handleSupabaseUser(sbUser) {
 function onSignedIn(profile, animate) {
   _xp = S.xp || 0;
 
-  const name     = profile.name || profile.given_name || 'Medic';
+  const name     = profile.name || profile.given_name || 'Student';
   const email    = profile.email || '';
   const photo    = profile.picture || '';
-  const initials = name.replace(/[^a-zA-Z ]/g,'').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || 'M';
+  const initials = name.replace(/[^a-zA-Z ]/g,'').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || 'S';
   const joinYear = new Date().getFullYear();
 
   function setAvatar(el, photoUrl, fallbackInitials) {
